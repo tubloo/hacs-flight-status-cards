@@ -1,0 +1,8 @@
+node_modules/
+build/
+dist/
+
+# Keep compiled frontend artifact for HACS installs
+flight-status-tracker-cards.js.map
+
+.DS_Store
