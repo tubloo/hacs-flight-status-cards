@@ -4,50 +4,157 @@ interface AddConfig {
   title?: string;
 }
 
+type CardHelpers = {
+  createCardElement: (config: Record<string, unknown>) => LovelaceCard;
+};
+
 class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
   private _config: AddConfig = {};
+  private _hass?: HomeAssistant;
+  private _card?: LovelaceCard;
 
   setConfig(config: AddConfig): void {
     this._config = config || {};
+    void this.buildCard();
   }
 
   set hass(hass: HomeAssistant | undefined) {
-    (this as unknown as { _hass?: HomeAssistant })._hass = hass;
-    if (hass) this.render();
+    this._hass = hass;
+    if (this._card && hass) this._card.hass = hass;
   }
 
   get hass(): HomeAssistant | undefined {
-    return (this as unknown as { _hass?: HomeAssistant })._hass;
+    return this._hass;
   }
 
-  private async callButton(entityId: string): Promise<void> {
-    if (!this.hass) return;
-    await this.hass.callService("button", "press", { entity_id: entityId });
-  }
+  private async buildCard(): Promise<void> {
+    const windowWithHelpers = window as unknown as { loadCardHelpers?: () => Promise<CardHelpers> };
+    if (!windowWithHelpers.loadCardHelpers) return;
 
-  private render(): void {
-    const title = this._config.title || "Add Flight";
-    this.innerHTML = `
-      <ha-card>
-        <div class="card-content">
-          <h3>${title}</h3>
-          <p>Fill your helper entities in the dashboard, then use actions below.</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button id="preview">Preview</button>
-            <button id="confirm">Add Flight</button>
-            <button id="clear">Clear</button>
-          </div>
-        </div>
-      </ha-card>
-    `;
+    const helpers = await windowWithHelpers.loadCardHelpers();
+    const title = this._config.title || "Add a flight";
 
-    this.querySelector("#preview")?.addEventListener("click", () => this.callButton("button.flight_status_tracker_preview_from_inputs"));
-    this.querySelector("#confirm")?.addEventListener("click", () => this.callButton("button.flight_status_tracker_confirm_add_preview"));
-    this.querySelector("#clear")?.addEventListener("click", () => this.callButton("button.flight_status_tracker_clear_preview"));
+    const config: Record<string, unknown> = {
+      type: "vertical-stack",
+      cards: [
+        {
+          type: "custom:mushroom-title-card",
+          title,
+          subtitle: "Enter airline + number + date, then search and add",
+        },
+        {
+          type: "vertical-stack",
+          cards: [
+            {
+              type: "horizontal-stack",
+              cards: [
+                { type: "entities", show_header_toggle: false, entities: [{ entity: "text.flight_status_tracker_add_flight_airline", name: "Airline code (e.g. EK)" }] },
+                { type: "entities", show_header_toggle: false, entities: [{ entity: "text.flight_status_tracker_add_flight_number", name: "Flight number (e.g. 236)" }] },
+              ],
+            },
+            {
+              type: "horizontal-stack",
+              cards: [
+                { type: "entities", show_header_toggle: false, entities: [{ entity: "date.flight_status_tracker_add_flight_date", name: "Date" }] },
+                { type: "entities", show_header_toggle: false, entities: [{ entity: "text.flight_status_tracker_add_flight_dep_airport", name: "Dep airport (optional)" }] },
+              ],
+            },
+            {
+              type: "horizontal-stack",
+              cards: [
+                { type: "entities", show_header_toggle: false, entities: [{ entity: "text.flight_status_tracker_add_flight_travellers", name: "Travellers (optional)" }] },
+                { type: "entities", show_header_toggle: false, entities: [{ entity: "text.flight_status_tracker_add_flight_notes", name: "Notes (optional)" }] },
+              ],
+            },
+          ],
+        },
+        {
+          type: "custom:tailwindcss-template-card",
+          content: `
+{% set p = state_attr('sensor.flight_status_tracker_add_preview','preview') or {} %}
+{% set f = p.get('flight') %}
+{% set ready = p.get('ready') %}
+{% set err = p.get('error') %}
+{% set warn = p.get('warning') %}
+{% set hint = p.get('hint') %}
+
+{% if not f %}
+<div class='rounded-2xl bg-[rgba(255,255,255,0.04)] p-4'>
+  <div class='text-sm opacity-80'>No preview yet.</div>
+  <div class='text-xs opacity-60 mt-1'>Fill fields and tap Search.</div>
+</div>
+{% else %}
+{% set dep = f.get('dep') or {} %}
+{% set arr = f.get('arr') or {} %}
+{% set dep_air = dep.get('airport') or {} %}
+{% set arr_air = arr.get('airport') or {} %}
+{% set dep_code = (dep_air.get('iata') or '—')|upper %}
+{% set arr_code = (arr_air.get('iata') or '—')|upper %}
+{% set airline = f.get('airline_name') or '' %}
+{% set ac = f.get('aircraft_type') or '' %}
+{% set logo = f.get('airline_logo_url') or ("https://pics.avs.io/64/64/" ~ (f.get('airline_code','')|upper) ~ ".png") %}
+{% set dep_time = dep.get('scheduled_local') or dep.get('scheduled') %}
+{% set arr_time = arr.get('scheduled_local') or arr.get('scheduled') %}
+{% set dep_hm = dep_time and (dep_time|string).replace(' ','T').split('T')[1][:5] %}
+{% set arr_hm = arr_time and (arr_time|string).replace(' ','T').split('T')[1][:5] %}
+{% set dep_city = dep_air.get('city') or dep_air.get('name') or dep_code %}
+{% set arr_city = arr_air.get('city') or arr_air.get('name') or arr_code %}
+{% set dep_tz = dep_air.get('tz_short') or '' %}
+{% set arr_tz = arr_air.get('tz_short') or '' %}
+
+<div class='rounded-2xl bg-[rgba(255,255,255,0.04)] p-4 space-y-3'>
+  <div class='flex items-center gap-3'>
+    <img src='{{ logo }}' class='h-10 w-10 object-contain rounded bg-white/90 p-1 ring-1 ring-white/30' />
+    <div class='flex-1'>
+      <div class='text-lg'>{{ f.get('airline_code','—') }} {{ f.get('flight_number','—') }}</div>
+      <div class='text-sm opacity-80'>{{ airline }}{% if ac %} · {{ ac }}{% endif %}</div>
+    </div>
+    <span class='text-xs px-2 py-1 rounded-full {{ "bg-emerald-800 text-white" if ready else "bg-amber-700 text-white" }}'>
+      {{ "Ready" if ready else "Preview" }}
+    </span>
+  </div>
+
+  <div class='flex items-center gap-2'>
+    <div class='text-xl font-semibold'>{{ dep_code }}</div>
+    <div class='flex-1 h-0.5 bg-gray-300/60'></div>
+    <div class='text-xl font-semibold'>{{ arr_code }}</div>
+  </div>
+
+  <div class='grid grid-cols-2 gap-x-4 gap-y-1 text-sm'>
+    <div class='opacity-80'>{{ dep_city|title }}</div><div class='opacity-80'>{{ arr_city|title }}</div>
+    <div class='text-2xl font-semibold text-gray-700'>{{ dep_hm or '—' }} <span class='text-xs opacity-70'>{{ dep_tz }}</span></div>
+    <div class='text-2xl font-semibold text-gray-700'>{{ arr_hm or '—' }} <span class='text-xs opacity-70'>{{ arr_tz }}</span></div>
+  </div>
+
+  {% if err or warn or hint %}
+  <div class='text-sm'>
+    {% if err %}<div class='text-red-300'>{{ err }}</div>{% endif %}
+    {% if warn %}<div class='text-amber-300'>{{ warn }}</div>{% endif %}
+    {% if hint and not err and not warn %}<div class='text-gray-300'>{{ hint }}</div>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+`,
+        },
+        {
+          type: "horizontal-stack",
+          cards: [
+            { type: "custom:mushroom-entity-card", entity: "button.flight_status_tracker_preview_from_inputs", name: "Search", icon: "mdi:magnify", tap_action: { action: "call-service", service: "button.press", target: { entity_id: "button.flight_status_tracker_preview_from_inputs" } } },
+            { type: "custom:mushroom-entity-card", entity: "button.flight_status_tracker_confirm_add_preview", name: "Add Flight", icon: "mdi:content-save", tap_action: { action: "call-service", service: "button.press", target: { entity_id: "button.flight_status_tracker_confirm_add_preview" } } },
+            { type: "custom:mushroom-entity-card", entity: "button.flight_status_tracker_clear_preview", name: "Clear", icon: "mdi:close-circle", tap_action: { action: "call-service", service: "button.press", target: { entity_id: "button.flight_status_tracker_clear_preview" } } },
+          ],
+        },
+      ],
+    };
+
+    this._card = helpers.createCardElement(config);
+    if (this._hass) this._card.hass = this._hass;
+    this.replaceChildren(this._card);
   }
 
   getCardSize(): number {
-    return 2;
+    return 6;
   }
 }
 

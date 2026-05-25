@@ -8,6 +8,11 @@ This file defines default instructions for AI coding assistants working in this 
 - Preserve backward compatibility of card type names.
 - Keep HACS packaging valid.
 
+## Source of Truth
+- Primary repo: `https://github.com/tubloo/hacs-flight-status-tracker`
+- Contract file to follow: `docs/cards_contract.md` (in primary repo)
+- Local sync notes: `SYNC_FROM_INTEGRATION.md`
+
 ## Repository Map
 - `src/cards/`: custom card implementations.
 - `src/index.ts`: card registration (`window.customCards`).
@@ -48,6 +53,7 @@ When behavior changes, validate at least:
 ## Releases
 - Do not create releases automatically.
 - Ask for confirmation before tagging/publishing.
+- Before release, check primary repo contract (`docs/cards_contract.md`) for any sync-required changes.
 - Ensure `hacs.json`, `README.md`, and `flight-status-tracker-cards.js` are up to date.
 
 ## Commits

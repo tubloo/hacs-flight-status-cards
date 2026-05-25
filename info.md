@@ -8,5 +8,8 @@ Includes:
 - Remove Flight card
 - Diagnostics & Control card
 
-Install via HACS Frontend (Dashboard category) from:
+Primary integration repo:
+- `https://github.com/tubloo/hacs-flight-status-tracker`
+
+Cards repo (HACS Frontend / Dashboard):
 - `https://github.com/tubloo/hacs-flight-status-cards`

@@ -2,82 +2,51 @@ import { HomeAssistant, LovelaceCard } from "../types";
 
 interface RemoveConfig {
   title?: string;
-  select_entity?: string;
-  remove_button_entity?: string;
 }
 
-const DEFAULT_SELECT = "select.flight_status_tracker_remove_flight";
-const DEFAULT_REMOVE_BUTTON = "button.flight_status_tracker_remove_selected_flight";
+type CardHelpers = {
+  createCardElement: (config: Record<string, unknown>) => LovelaceCard;
+};
 
 class FlightStatusTrackerRemoveCard extends HTMLElement implements LovelaceCard {
   private _config: RemoveConfig = {};
+  private _hass?: HomeAssistant;
+  private _card?: LovelaceCard;
 
   setConfig(config: RemoveConfig): void {
     this._config = config || {};
+    this.buildCard();
   }
 
   set hass(hass: HomeAssistant | undefined) {
-    (this as unknown as { _hass?: HomeAssistant })._hass = hass;
-    if (hass) this.render();
+    this._hass = hass;
+    if (this._card && hass) this._card.hass = hass;
   }
 
   get hass(): HomeAssistant | undefined {
-    return (this as unknown as { _hass?: HomeAssistant })._hass;
+    return this._hass;
   }
 
-  private async setSelected(option: string): Promise<void> {
-    const selectEntity = this._config.select_entity || DEFAULT_SELECT;
-    await this.hass?.callService("select", "select_option", {
-      entity_id: selectEntity,
-      option,
-    });
-  }
+  private async buildCard(): Promise<void> {
+    const windowWithHelpers = window as unknown as {
+      loadCardHelpers?: () => Promise<CardHelpers>;
+    };
+    if (!windowWithHelpers.loadCardHelpers) return;
 
-  private async removeSelected(): Promise<void> {
-    const removeButton = this._config.remove_button_entity || DEFAULT_REMOVE_BUTTON;
-    await this.hass?.callService("button", "press", { entity_id: removeButton });
-  }
+    const helpers = await windowWithHelpers.loadCardHelpers();
+    const config: Record<string, unknown> = {
+      type: "entities",
+      title: this._config.title || "Remove Flight",
+      show_header_toggle: false,
+      entities: [
+        { entity: "select.flight_status_tracker_remove_flight", name: "Select flight to remove" },
+        { entity: "button.flight_status_tracker_remove_selected_flight", name: "Remove selected flight" },
+      ],
+    };
 
-  private render(): void {
-    if (!this.hass) return;
-
-    const title = this._config.title || "Remove Flight";
-    const selectEntity = this._config.select_entity || DEFAULT_SELECT;
-    const selectState = this.hass.states[selectEntity];
-    const options = Array.isArray(selectState?.attributes?.options)
-      ? (selectState.attributes.options as string[])
-      : [];
-    const current = typeof selectState?.state === "string" ? selectState.state : "";
-
-    const optionHtml = options
-      .map((value) => {
-        const selected = value === current ? "selected" : "";
-        return `<option value="${value}" ${selected}>${value}</option>`;
-      })
-      .join("");
-
-    this.innerHTML = `
-      <ha-card>
-        <div class="card-content">
-          <h3>${title}</h3>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-            <select id="flight-select" style="min-width:220px;">
-              ${optionHtml || '<option value="">No flight available</option>'}
-            </select>
-            <button id="remove" ${options.length ? "" : "disabled"}>Remove Selected</button>
-          </div>
-        </div>
-      </ha-card>
-    `;
-
-    this.querySelector("#flight-select")?.addEventListener("change", async (event) => {
-      const target = event.target as HTMLSelectElement;
-      if (target?.value) await this.setSelected(target.value);
-    });
-
-    this.querySelector("#remove")?.addEventListener("click", async () => {
-      await this.removeSelected();
-    });
+    this._card = helpers.createCardElement(config);
+    if (this._hass) this._card.hass = this._hass;
+    this.replaceChildren(this._card);
   }
 
   getCardSize(): number {

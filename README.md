@@ -2,6 +2,11 @@
 
 Custom Lovelace cards for the [Flight Status Tracker integration](https://github.com/tubloo/hacs-flight-status-tracker).
 
+Primary integration docs:
+- README: https://github.com/tubloo/hacs-flight-status-tracker/blob/main/README.md
+- Detailed guide: https://github.com/tubloo/hacs-flight-status-tracker/blob/main/docs/guide.md
+- Reference Lovelace templates: https://github.com/tubloo/hacs-flight-status-tracker/tree/main/docs/lovelace
+
 ## Cards Included
 
 - `Flight List` (`custom:flight-status-tracker-list-card`)
@@ -43,3 +48,8 @@ npm run build
 
 The compiled file used by HACS is:
 - `flight-status-tracker-cards.js`
+
+## Sync Policy
+
+This repo follows the integration contract:
+- https://github.com/tubloo/hacs-flight-status-tracker/blob/main/docs/cards_contract.md
