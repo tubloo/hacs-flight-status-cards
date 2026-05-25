@@ -9,6 +9,10 @@ type CardHelpers = {
 };
 
 class FlightStatusTrackerDiagnosticsCard extends HTMLElement implements LovelaceCard {
+  static getStubConfig(): Record<string, unknown> {
+    return { type: "custom:flight-status-tracker-diagnostics-card" };
+  }
+
   private _config: DiagnosticsConfig = {};
   private _hass?: HomeAssistant;
   private _card?: LovelaceCard;
