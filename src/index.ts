@@ -9,24 +9,28 @@ const cards = [
     type: "flight-status-tracker-list-card",
     name: "Flight List",
     description: "Lists tracked flights from Flight Status Tracker",
+    icon: "mdi:airplane",
     preview: true,
   },
   {
     type: "flight-status-tracker-add-card",
     name: "Add Flight",
     description: "Preview and confirm adding a flight",
+    icon: "mdi:airplane-plus",
     preview: true,
   },
   {
     type: "flight-status-tracker-remove-card",
     name: "Remove Flight",
     description: "Select and remove a tracked flight",
+    icon: "mdi:airplane-remove",
     preview: true,
   },
   {
     type: "flight-status-tracker-diagnostics-card",
     name: "Diagnostics & Control",
     description: "API diagnostics and control actions",
+    icon: "mdi:airplane-cog",
     preview: true,
   },
 ];

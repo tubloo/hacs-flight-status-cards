@@ -90,8 +90,8 @@ class FlightStatusTrackerDiagnosticsCard extends HTMLElement implements Lovelace
           entities: [
             { entity: "sensor.flight_status_tracker_upcoming_flights", name: "Upcoming flights (summary)" },
             { entity: "button.flight_status_tracker_refresh_now", name: "Refresh now" },
-            { entity: "button.flight_status_tracker_remove_landed_flights", name: "Remove landed flights" },
-            { entity: "button.flight_status_tracker_refresh_directory_data", name: "Refresh airport/airline directory data" },
+            { entity: "button.flight_status_tracker_remove_landed", name: "Remove landed flights" },
+            { entity: "button.flight_status_tracker_refresh_directory", name: "Refresh airport/airline directory data" },
           ],
         },
       ],
