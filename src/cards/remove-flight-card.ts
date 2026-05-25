@@ -54,4 +54,6 @@ class FlightStatusTrackerRemoveCard extends HTMLElement implements LovelaceCard 
   }
 }
 
-customElements.define("flight-status-tracker-remove-card", FlightStatusTrackerRemoveCard);
+if (!customElements.get("flight-status-tracker-remove-card")) {
+  customElements.define("flight-status-tracker-remove-card", FlightStatusTrackerRemoveCard);
+}

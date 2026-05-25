@@ -99,4 +99,6 @@ class FlightStatusTrackerDiagnosticsCard extends HTMLElement implements Lovelace
   }
 }
 
-customElements.define("flight-status-tracker-diagnostics-card", FlightStatusTrackerDiagnosticsCard);
+if (!customElements.get("flight-status-tracker-diagnostics-card")) {
+  customElements.define("flight-status-tracker-diagnostics-card", FlightStatusTrackerDiagnosticsCard);
+}

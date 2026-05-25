@@ -30,5 +30,8 @@ const cards = [
   },
 ];
 
-const windowAny = window as unknown as { customCards?: unknown[] };
-windowAny.customCards = [...(windowAny.customCards || []), ...cards];
+const windowAny = window as unknown as { customCards?: Array<Record<string, unknown>> };
+const existing = windowAny.customCards || [];
+const existingTypes = new Set(existing.map((c) => String(c.type || "")));
+const additions = cards.filter((c) => !existingTypes.has(String(c.type || "")));
+windowAny.customCards = [...existing, ...additions];

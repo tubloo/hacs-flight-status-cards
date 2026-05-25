@@ -265,4 +265,6 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
   }
 }
 
-customElements.define("flight-status-tracker-list-card", FlightStatusTrackerListCard);
+if (!customElements.get("flight-status-tracker-list-card")) {
+  customElements.define("flight-status-tracker-list-card", FlightStatusTrackerListCard);
+}
