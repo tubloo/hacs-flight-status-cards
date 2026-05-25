@@ -1,3 +1,4 @@
+import "./editors";
 import "./cards/flight-list-card";
 import "./cards/add-flight-card";
 import "./cards/remove-flight-card";
@@ -31,7 +32,10 @@ const cards = [
 ];
 
 const windowAny = window as unknown as { customCards?: Array<Record<string, unknown>> };
-const existing = windowAny.customCards || [];
-const existingTypes = new Set(existing.map((c) => String(c.type || "")));
-const additions = cards.filter((c) => !existingTypes.has(String(c.type || "")));
-windowAny.customCards = [...existing, ...additions];
+windowAny.customCards = windowAny.customCards || [];
+const existingTypes = new Set(windowAny.customCards.map((c) => String(c.type || "")));
+for (const card of cards) {
+  if (!existingTypes.has(card.type)) {
+    windowAny.customCards.push(card);
+  }
+}

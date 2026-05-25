@@ -9,8 +9,12 @@ type CardHelpers = {
 };
 
 class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
+  static getConfigElement(): HTMLElement {
+    return document.createElement("flight-status-tracker-add-card-editor");
+  }
+
   static getStubConfig(): Record<string, unknown> {
-    return { type: "custom:flight-status-tracker-add-card" };
+    return {};
   }
 
   private _config: AddConfig = {};
