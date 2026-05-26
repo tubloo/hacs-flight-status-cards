@@ -109,12 +109,29 @@ class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
 {% set arr_city = arr_air.get('city') or arr_air.get('name') or arr_code %}
 {% set dep_tz = dep_air.get('tz_short') or '' %}
 {% set arr_tz = arr_air.get('tz_short') or '' %}
+{% set dep_ops = [] %}
+{% if dep.get('check_in_counters') %}{% set dep_ops = dep_ops + ['Check-in ' ~ dep.get('check_in_counters')] %}{% endif %}
+{% if dep.get('boarding_time') %}{% set dep_ops = dep_ops + ['Boarding ' ~ ((dep.get('boarding_time')|string).replace(' ','T').split('T')[1][:5])] %}{% endif %}
+{% if dep.get('door_time') %}{% set dep_ops = dep_ops + ['Door ' ~ ((dep.get('door_time')|string).replace(' ','T').split('T')[1][:5])] %}{% endif %}
+{% set arr_ops = [] %}
+{% if arr.get('baggage_claim') %}{% set arr_ops = arr_ops + ['Baggage ' ~ arr.get('baggage_claim')] %}{% endif %}
+{% if arr.get('belt') %}{% set arr_ops = arr_ops + ['Belt ' ~ arr.get('belt')] %}{% endif %}
+{% set dep_move = [] %}
+{% if dep.get('off_block_time') %}{% set dep_move = dep_move + ['Off-block ' ~ ((dep.get('off_block_time')|string).replace(' ','T').split('T')[1][:5])] %}{% endif %}
+{% if dep.get('takeoff_time') %}{% set dep_move = dep_move + ['Takeoff ' ~ ((dep.get('takeoff_time')|string).replace(' ','T').split('T')[1][:5])] %}{% endif %}
+{% set arr_move = [] %}
+{% if arr.get('landing_time') %}{% set arr_move = arr_move + ['Landing ' ~ ((arr.get('landing_time')|string).replace(' ','T').split('T')[1][:5])] %}{% endif %}
+{% if arr.get('on_block_time') %}{% set arr_move = arr_move + ['On-block ' ~ ((arr.get('on_block_time')|string).replace(' ','T').split('T')[1][:5])] %}{% endif %}
+{% set input_date = (p.get('input') or {}).get('date') %}
+{% set dep_date = dep_time and as_datetime(dep_time) %}
+{% set dep_date_input = input_date and as_datetime(input_date ~ 'T00:00:00') %}
+{% set dep_date_display = dep_date and dep_date.strftime('%d %b (%a)') or (dep_date_input and dep_date_input.strftime('%d %b (%a)')) or '—' %}
 
 <div class='rounded-2xl bg-[rgba(255,255,255,0.04)] p-4 space-y-3'>
   <div class='flex items-center gap-3'>
     <img src='{{ logo }}' class='h-10 w-10 object-contain rounded bg-white/90 p-1 ring-1 ring-white/30' />
     <div class='flex-1'>
-      <div class='text-lg'>{{ f.get('airline_code','—') }} {{ f.get('flight_number','—') }}</div>
+      <div class='text-lg'>{{ f.get('airline_code','—') }} {{ f.get('flight_number','—') }} · {{ dep_date_display }}</div>
       <div class='text-sm opacity-80'>{{ airline }}{% if ac %} · {{ ac }}{% endif %}</div>
     </div>
     <span class='text-xs px-2 py-1 rounded-full {{ "bg-emerald-800 text-white" if ready else "bg-amber-700 text-white" }}'>
@@ -133,6 +150,18 @@ class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
     <div class='text-2xl font-semibold text-gray-700'>{{ dep_hm or '—' }} <span class='text-xs opacity-70'>{{ dep_tz }}</span></div>
     <div class='text-2xl font-semibold text-gray-700'>{{ arr_hm or '—' }} <span class='text-xs opacity-70'>{{ arr_tz }}</span></div>
   </div>
+
+  {% if dep_ops or arr_ops %}
+  <div class='grid grid-cols-2 gap-x-4 gap-y-1 text-sm'>
+    <div class='opacity-70'>{{ dep_ops|join(' · ') }}</div><div class='opacity-70'>{{ arr_ops|join(' · ') }}</div>
+  </div>
+  {% endif %}
+
+  {% if dep_move or arr_move %}
+  <div class='grid grid-cols-2 gap-x-4 gap-y-1 text-sm'>
+    <div class='opacity-70'>{{ dep_move|join(' · ') }}</div><div class='opacity-70'>{{ arr_move|join(' · ') }}</div>
+  </div>
+  {% endif %}
 
   {% if err or warn or hint %}
   <div class='text-sm'>

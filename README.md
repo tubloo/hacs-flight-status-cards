@@ -24,6 +24,16 @@ Primary integration docs:
    - URL: `/hacsfiles/hacs-flight-status-cards/flight-status-tracker-cards.js`
    - Type: `module`
 
+
+## Required Frontend Dependencies
+
+Install these from **HACS > Frontend** before using the cards:
+- `Mushroom` (`custom:mushroom-*`)
+- `Auto-Entities` (`custom:auto-entities`)
+- `TailwindCSS Template Card` (`custom:tailwindcss-template-card`)
+
+If a dependency is not listed in HACS, add its GitHub repo under **HACS > Frontend > Custom repositories**.
+
 ## Quick Lovelace Example
 
 ```yaml

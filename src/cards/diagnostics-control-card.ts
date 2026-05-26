@@ -78,7 +78,7 @@ class FlightStatusTrackerDiagnosticsCard extends HTMLElement implements Lovelace
         {
           type: "custom:mushroom-template-card",
           primary: "Provider Breakdown (Lifetime)",
-          secondary: "{% set by = state_attr('sensor.flight_status_tracker_api_calls','by_provider') or {} %} FlightAPI {{ by.get('flightapi', 0) }} · AirLabs {{ by.get('airlabs', 0) }} · Aviationstack {{ by.get('aviationstack', 0) }} · FR24 {{ by.get('flightradar24', 0) }}",
+          secondary: "{% set by = state_attr('sensor.flight_status_tracker_api_calls','by_provider') or {} %} AeroDataBox {{ by.get('aerodatabox', 0) }} · FlightAPI {{ by.get('flightapi', 0) }}",
           icon: "mdi:chart-donut",
           icon_color: "indigo",
           tap_action: { action: "more-info", entity: "sensor.flight_status_tracker_api_calls" },

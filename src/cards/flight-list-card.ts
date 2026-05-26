@@ -127,6 +127,14 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
   {%- set dep_term_gate = ui.dep_term_gate or '' -%}
   {%- set arr_term_gate = ui.arr_term_gate or '' -%}
   {%- set show_term_gate_row = ui.show_term_gate_row | default(false) -%}
+  {%- set dep_ops_line = ui.dep_ops_line or '' -%}
+  {%- set arr_ops_line = ui.arr_ops_line or '' -%}
+  {%- set show_ops_row = ui.show_ops_row | default(false) -%}
+  {%- set dep_movement_line = ui.dep_movement_line or '' -%}
+  {%- set arr_movement_line = ui.arr_movement_line or '' -%}
+  {%- set show_movement_row = ui.show_movement_row | default(false) -%}
+  {%- set position_line = ui.position_line -%}
+  {%- set show_position_row = ui.show_position_row | default(false) -%}
 
   {%- set progress_start = ui.progress_start_ts and as_datetime(ui.progress_start_ts) -%}
   {%- set progress_end = ui.progress_end_ts and as_datetime(ui.progress_end_ts) -%}
