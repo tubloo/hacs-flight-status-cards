@@ -20,15 +20,21 @@ class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
   private _config: AddConfig = {};
   private _hass?: HomeAssistant;
   private _card?: LovelaceCard;
+  private _buildPromise?: Promise<void>;
+  private _lastConfigSignature = "";
 
   setConfig(config: AddConfig): void {
     this._config = config || {};
-    void this.buildCard();
+    const nextSignature = JSON.stringify(this._config || {});
+    if (this._card && nextSignature === this._lastConfigSignature) return;
+    this._lastConfigSignature = nextSignature;
+    this._buildPromise = this.buildCard();
   }
 
   set hass(hass: HomeAssistant | undefined) {
     this._hass = hass;
     if (this._card && hass) this._card.hass = hass;
+    else if (hass && !this._buildPromise) this._buildPromise = this.buildCard();
   }
 
   get hass(): HomeAssistant | undefined {
@@ -36,6 +42,7 @@ class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
   }
 
   private async buildCard(): Promise<void> {
+    if (this._card) return;
     const windowWithHelpers = window as unknown as { loadCardHelpers?: () => Promise<CardHelpers> };
     if (!windowWithHelpers.loadCardHelpers) return;
 
@@ -124,8 +131,10 @@ class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
 {% if arr.get('on_block_time') %}{% set arr_move = arr_move + ['On-block ' ~ ((arr.get('on_block_time')|string).replace(' ','T').split('T')[1][:5])] %}{% endif %}
 {% set input_date = (p.get('input') or {}).get('date') %}
 {% set dep_date = dep_time and as_datetime(dep_time) %}
+{% set arr_date = arr_time and as_datetime(arr_time) %}
 {% set dep_date_input = input_date and as_datetime(input_date ~ 'T00:00:00') %}
 {% set dep_date_display = dep_date and dep_date.strftime('%d %b (%a)') or (dep_date_input and dep_date_input.strftime('%d %b (%a)')) or '—' %}
+{% set arr_date_display = arr_date and arr_date.strftime('%d %b (%a)') or '—' %}
 
 <div class='rounded-2xl bg-[rgba(255,255,255,0.04)] p-4 space-y-3'>
   <div class='flex items-center gap-3'>
@@ -146,7 +155,7 @@ class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
   </div>
 
   <div class='grid grid-cols-2 gap-x-4 gap-y-1 text-sm'>
-    <div class='opacity-80'>{{ dep_city|title }}</div><div class='opacity-80'>{{ arr_city|title }}</div>
+    <div class='opacity-80'>{{ dep_city|title }} · {{ dep_date_display }}</div><div class='opacity-80'>{{ arr_city|title }} · {{ arr_date_display }}</div>
     <div class='text-2xl font-semibold text-gray-700'>{{ dep_hm or '—' }} <span class='text-xs opacity-70'>{{ dep_tz }}</span></div>
     <div class='text-2xl font-semibold text-gray-700'>{{ arr_hm or '—' }} <span class='text-xs opacity-70'>{{ arr_tz }}</span></div>
   </div>

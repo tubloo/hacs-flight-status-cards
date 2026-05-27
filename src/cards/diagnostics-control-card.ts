@@ -20,15 +20,21 @@ class FlightStatusTrackerDiagnosticsCard extends HTMLElement implements Lovelace
   private _config: DiagnosticsConfig = {};
   private _hass?: HomeAssistant;
   private _card?: LovelaceCard;
+  private _buildPromise?: Promise<void>;
+  private _lastConfigSignature = "";
 
   setConfig(config: DiagnosticsConfig): void {
     this._config = config || {};
-    void this.buildCard();
+    const nextSignature = JSON.stringify(this._config || {});
+    if (this._card && nextSignature === this._lastConfigSignature) return;
+    this._lastConfigSignature = nextSignature;
+    this._buildPromise = this.buildCard();
   }
 
   set hass(hass: HomeAssistant | undefined) {
     this._hass = hass;
     if (this._card && hass) this._card.hass = hass;
+    else if (hass && !this._buildPromise) this._buildPromise = this.buildCard();
   }
 
   get hass(): HomeAssistant | undefined {
@@ -36,6 +42,7 @@ class FlightStatusTrackerDiagnosticsCard extends HTMLElement implements Lovelace
   }
 
   private async buildCard(): Promise<void> {
+    if (this._card) return;
     const windowWithHelpers = window as unknown as { loadCardHelpers?: () => Promise<CardHelpers> };
     if (!windowWithHelpers.loadCardHelpers) return;
 

@@ -209,13 +209,17 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
 
   {%- set pax = (f.travellers | join(', ')) if f.travellers else '' -%}
   {%- set airline_logo = f.airline_logo_url or ("https://pics.avs.io/64/64/" ~ (f.airline_code | default('') | upper) ~ ".png") -%}
+  {%- set aircraft_image = f.aircraft_image_url -%}
   {%- set airline_name = f.airline_name or '' -%}
   {%- set dep_date_display = (ui.dep_label_line and ui.dep_label_line.split(' · ')[1]) if (ui.dep_label_line and ' · ' in ui.dep_label_line) else '—' -%}
 
   {
     "type": "custom:tailwindcss-template-card",
     "entity": "{{ s.entity_id }}",
-    "content": "<div class='rounded-2xl bg-[rgba(255,255,255,0.04)] p-4 space-y-3'>\\
+    "content": "<div class='relative overflow-hidden rounded-2xl bg-[rgba(255,255,255,0.04)] p-4 space-y-3'>\\
+    {% if aircraft_image %}<img src='{{ aircraft_image }}' class='pointer-events-none absolute inset-0 w-full h-full object-cover object-center opacity-[0.24]' />{% endif %}\\
+    {% if aircraft_image %}<div class='absolute inset-0 bg-[rgba(255,255,255,0.55)] pointer-events-none'></div>{% endif %}\\
+    <div class='relative z-[1]'>\\
     <div class='flex items-center gap-3'>\\
       <img src='{{ airline_logo }}' class='h-12 w-12 object-contain rounded bg-white/90 p-1 ring-1 ring-white/30' />\\
       <div class='flex-1'>\\
@@ -263,6 +267,7 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
     </div>\\
     {% endif %}\\
     <div class='text-xs opacity-60'>Updated {{ updated_ago if updated_ago is not none else '—' }} min ago · Source: {{ source }}</div>\\
+    </div>\\
   </div>"
   }{{ "," if not loop.last else "" }}
 {% endfor %} ]`,
