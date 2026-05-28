@@ -49,6 +49,28 @@ cards:
     title: Diagnostics & Control
 ```
 
+## Flight List Card Options
+
+`custom:flight-status-tracker-list-card` supports:
+
+- `title` (string)
+- `show_background_image` (boolean, default `true`)
+- `max_flights` (number, optional): minimum `1` when set; leave empty to show all flights
+- `sort_by` (`departure` | `arrival`, default `departure`)
+
+Example:
+
+```yaml
+type: custom:flight-status-tracker-list-card
+title: Flight List
+show_background_image: true
+max_flights: 5
+sort_by: departure
+```
+
+`Updated` in each flight tile is shown as human-readable relative time and represents the
+last successful status retrieval from the provider.
+
 ## Build (for development)
 
 ```bash
