@@ -2,6 +2,9 @@ import { HomeAssistant, LovelaceCard } from "../types";
 
 interface ListConfig {
   title?: string;
+  show_background_image?: boolean;
+  max_flights?: number;
+  sort_by?: "departure" | "arrival";
 }
 
 type CardHelpers = {
@@ -43,20 +46,34 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
 
     const helpers = await windowWithHelpers.loadCardHelpers();
     const title = this._config.title || "Flight List";
+    const showBackgroundImage = this._config.show_background_image !== false;
+    const sortBy = this._config.sort_by === "arrival" ? "arrival" : "departure";
+    const sortAttr = sortBy === "arrival" ? "attributes.arr_scheduled" : "attributes.dep_scheduled";
+    const maxFlights =
+      typeof this._config.max_flights === "number" && Number.isFinite(this._config.max_flights)
+        ? Math.max(1, Math.floor(this._config.max_flights))
+        : null;
 
     const config: Record<string, unknown> = {
       type: "vertical-stack",
       cards: [
         {
           type: "custom:tailwindcss-template-card",
-          content: `{% set entries = namespace(items=[]) %}
+          content: `{% set max_flights = ${maxFlights ?? "none"} %}
+{% set entries = namespace(items=[]) %}
 {% for s in states.sensor %}
   {% if s.attributes.flight_key is defined and s.attributes.flight_key and s.state not in ['unknown', 'unavailable'] %}
     {% set entries.items = entries.items + [s] %}
   {% endif %}
 {% endfor %}
+{% set entries_sorted = entries.items | sort(attribute='${sortAttr}') %}
+{% if max_flights is not none %}
+  {% set entries_display = entries_sorted[:max_flights] %}
+{% else %}
+  {% set entries_display = entries_sorted %}
+{% endif %}
 <div class="text-2xl font-semibold">
-  ${title} ({{ entries.items | count }})
+  ${title} ({{ entries_display | count }})
 </div>`,
         },
         {
@@ -66,13 +83,18 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
           },
           card_param: "cards",
           filter: {
-            template: `{% set entries = namespace(items=[]) %}
+            template: `{% set show_aircraft_image = ${showBackgroundImage ? "true" : "false"} %}
+{% set entries = namespace(items=[]) %}
 {% for s in states.sensor %}
   {% if s.attributes.flight_key is defined and s.attributes.flight_key and s.state not in ['unknown', 'unavailable'] %}
     {% set entries.items = entries.items + [s] %}
   {% endif %}
 {% endfor %}
-{% set entries = entries.items | sort(attribute='attributes.dep_scheduled') %}
+{% set entries = entries.items | sort(attribute='${sortAttr}') %}
+{% set max_flights = ${maxFlights ?? "none"} %}
+{% if max_flights is not none %}
+  {% set entries = entries[:max_flights] %}
+{% endif %}
 [ {% for s in entries %}
   {%- set f = s.attributes.flight or {} -%}
   {%- set ui = s.attributes.ui or f.ui or {} -%}
@@ -217,8 +239,8 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
     "type": "custom:tailwindcss-template-card",
     "entity": "{{ s.entity_id }}",
     "content": "<div class='relative overflow-hidden rounded-2xl bg-[rgba(255,255,255,0.04)] p-4 space-y-3'>\\
-    {% if aircraft_image %}<img src='{{ aircraft_image }}' class='pointer-events-none absolute inset-0 w-full h-full object-cover object-center opacity-[0.24]' />{% endif %}\\
-    {% if aircraft_image %}<div class='absolute inset-0 bg-[rgba(255,255,255,0.55)] pointer-events-none'></div>{% endif %}\\
+    {% if show_aircraft_image and aircraft_image %}<img src='{{ aircraft_image }}' class='pointer-events-none absolute inset-0 w-full h-full object-cover object-center opacity-[0.24]' />{% endif %}\\
+    {% if show_aircraft_image and aircraft_image %}<div class='absolute inset-0 bg-[rgba(255,255,255,0.55)] dark:bg-[rgba(0,0,0,0.45)] pointer-events-none'></div>{% endif %}\\
     <div class='relative z-[1]'>\\
     <div class='flex items-center gap-3'>\\
       <img src='{{ airline_logo }}' class='h-12 w-12 object-contain rounded bg-white/90 p-1 ring-1 ring-white/30' />\\
