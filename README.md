@@ -90,4 +90,5 @@ This repo follows the integration contract:
 
 ## Release Notes
 
+- `v1.0.8`: Restored relative "Updated" label format (min/hr/day ago) while keeping non-live rendering to avoid flicker from time-tick rerenders.
 - `v1.0.7`: Reduced flicker by removing timer-driven `hass` pushes, targeting only integration flight entities (instead of scanning all sensors), and removing `now()`-driven template recomputation for progress/countdown/relative-age text.

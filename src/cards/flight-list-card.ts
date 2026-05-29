@@ -200,7 +200,22 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
 
   {%- set remaining_label = None -%}
 
-  {%- set updated_label = ui.updated_abs or '—' -%}
+  {%- set updated_ago = ui.updated_ago_min -%}
+  {%- set updated_label = '—' -%}
+  {%- if updated_ago is number -%}
+    {%- set mins = updated_ago | int -%}
+    {%- if mins <= 0 -%}
+      {%- set updated_label = 'just now' -%}
+    {%- elif mins < 60 -%}
+      {%- set updated_label = mins ~ ' min ago' -%}
+    {%- elif mins < 1440 -%}
+      {%- set hrs = (mins / 60) | round(0, 'floor') | int -%}
+      {%- set updated_label = hrs ~ ' hr ago' -%}
+    {%- else -%}
+      {%- set days = (mins / 1440) | round(0, 'floor') | int -%}
+      {%- set updated_label = days ~ (' day ago' if days == 1 else ' days ago') -%}
+    {%- endif -%}
+  {%- endif -%}
   {%- set source = ui.source or '—' -%}
   {%- set status_error_text = ui.status_error_text -%}
   {%- set show_error = status_error_text -%}
