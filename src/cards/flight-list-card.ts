@@ -5,6 +5,7 @@ interface ListConfig {
   show_background_image?: boolean;
   max_flights?: number;
   sort_by?: "departure" | "arrival";
+  ui_refresh_seconds?: number;
 }
 
 type CardHelpers = {
@@ -23,6 +24,9 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
   private _config: ListConfig = {};
   private _hass?: HomeAssistant;
   private _card?: LovelaceCard;
+  private _latestHassForPush?: HomeAssistant;
+  private _nextPushTimer?: number;
+  private _lastUiPushMs = 0;
 
   setConfig(config: ListConfig): void {
     this._config = config || {};
@@ -31,11 +35,55 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
 
   set hass(hass: HomeAssistant | undefined) {
     this._hass = hass;
-    if (this._card && hass) this._card.hass = hass;
+    if (!this._card || !hass) return;
+    this._latestHassForPush = hass;
+
+    const raw = this._config.ui_refresh_seconds;
+    const refreshSeconds =
+      typeof raw === "number" && Number.isFinite(raw) ? Math.max(0, Math.min(300, Math.floor(raw))) : 60;
+    if (refreshSeconds === 0) {
+      this._clearPushTimer();
+      this._card.hass = hass;
+      this._lastUiPushMs = Date.now();
+      return;
+    }
+
+    const now = Date.now();
+    const intervalMs = refreshSeconds * 1000;
+    const dueAt = this._lastUiPushMs + intervalMs;
+
+    if (this._lastUiPushMs === 0 || now >= dueAt) {
+      this._clearPushTimer();
+      this._card.hass = hass;
+      this._lastUiPushMs = now;
+      return;
+    }
+
+    if (!this._nextPushTimer) {
+      const waitMs = Math.max(50, dueAt - now);
+      this._nextPushTimer = window.setTimeout(() => {
+        this._nextPushTimer = undefined;
+        if (this._card && this._latestHassForPush) {
+          this._card.hass = this._latestHassForPush;
+          this._lastUiPushMs = Date.now();
+        }
+      }, waitMs);
+    }
   }
 
   get hass(): HomeAssistant | undefined {
     return this._hass;
+  }
+
+  disconnectedCallback(): void {
+    this._clearPushTimer();
+  }
+
+  private _clearPushTimer(): void {
+    if (this._nextPushTimer) {
+      window.clearTimeout(this._nextPushTimer);
+      this._nextPushTimer = undefined;
+    }
   }
 
   private async buildCard(): Promise<void> {
@@ -62,7 +110,7 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
           content: `{% set max_flights = ${maxFlights ?? "none"} %}
 {% set entries = namespace(items=[]) %}
 {% for s in states.sensor %}
-  {% if s.attributes.flight_key is defined and s.attributes.flight_key and s.state not in ['unknown', 'unavailable'] %}
+  {% if s.attributes.flight_key is defined and s.attributes.flight_key  %}
     {% set entries.items = entries.items + [s] %}
   {% endif %}
 {% endfor %}
@@ -86,7 +134,7 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
             template: `{% set show_aircraft_image = ${showBackgroundImage ? "true" : "false"} %}
 {% set entries = namespace(items=[]) %}
 {% for s in states.sensor %}
-  {% if s.attributes.flight_key is defined and s.attributes.flight_key and s.state not in ['unknown', 'unavailable'] %}
+  {% if s.attributes.flight_key is defined and s.attributes.flight_key  %}
     {% set entries.items = entries.items + [s] %}
   {% endif %}
 {% endfor %}
@@ -315,6 +363,7 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
 
     this._card = helpers.createCardElement(config);
     if (this._hass) this._card.hass = this._hass;
+    this._lastUiPushMs = Date.now();
     this.replaceChildren(this._card);
   }
 

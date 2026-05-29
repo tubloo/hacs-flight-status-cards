@@ -53,6 +53,11 @@ class FlightStatusTrackerListCardEditor extends BaseFlightStatusEditor {
     const sortBy = this._config.sort_by === "arrival" ? "arrival" : "departure";
     const maxFlightsRaw = Number(this._config.max_flights);
     const maxFlights = Number.isFinite(maxFlightsRaw) && maxFlightsRaw > 0 ? Math.floor(maxFlightsRaw) : "";
+    const uiRefreshRaw = Number(this._config.ui_refresh_seconds);
+    const uiRefreshSeconds =
+      Number.isFinite(uiRefreshRaw) && uiRefreshRaw >= 0
+        ? Math.max(0, Math.min(300, Math.floor(uiRefreshRaw)))
+        : 60;
     this.innerHTML = `
       <div style="padding: 12px;">
         <label style="display:block;font-weight:600;margin-bottom:6px;">${this._titleLabel}</label>
@@ -65,6 +70,9 @@ class FlightStatusTrackerListCardEditor extends BaseFlightStatusEditor {
           <option value="departure" ${sortBy === "departure" ? "selected" : ""}>Departure</option>
           <option value="arrival" ${sortBy === "arrival" ? "selected" : ""}>Arrival</option>
         </select>
+        <label style="display:block;font-weight:500;margin-top:10px;margin-bottom:6px;">UI refresh interval (seconds)</label>
+        <input id="ui_refresh_seconds" type="number" min="0" max="300" step="1" value="${uiRefreshSeconds}" style="width:100%;padding:8px;box-sizing:border-box;" />
+        <div style="font-size:12px;opacity:0.7;margin-top:4px;">0 = immediate updates. Maximum is 300 (5 minutes).</div>
         <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:500;">
           <input id="show_background_image" type="checkbox" ${showBackgroundImage ? "checked" : ""} />
           Show aircraft background image
@@ -88,6 +96,11 @@ class FlightStatusTrackerListCardEditor extends BaseFlightStatusEditor {
     this.querySelector("#sort_by")?.addEventListener("change", (event) => {
       const value = (event.target as HTMLSelectElement).value === "arrival" ? "arrival" : "departure";
       this.updateConfig({ sort_by: value });
+    });
+    this.querySelector("#ui_refresh_seconds")?.addEventListener("input", (event) => {
+      const raw = Number((event.target as HTMLInputElement).value);
+      const value = Number.isFinite(raw) ? Math.max(0, Math.min(300, Math.floor(raw))) : 60;
+      this.updateConfig({ ui_refresh_seconds: value });
     });
     this.querySelector("#show_background_image")?.addEventListener("change", (event) => {
       const checked = (event.target as HTMLInputElement).checked;
