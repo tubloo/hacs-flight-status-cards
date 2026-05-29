@@ -57,7 +57,7 @@ cards:
 - `show_background_image` (boolean, default `true`)
 - `max_flights` (number, optional): minimum `1` when set; leave empty to show all flights
 - `sort_by` (`departure` | `arrival`, default `departure`)
-- `ui_refresh_seconds` (number, default `60`): `0` = immediate updates, max `300` (5 min)
+- `ui_refresh_seconds` (number, default `60`): compatibility option; card now relies on backend meaningful updates for stable rendering (timer-driven pushes are disabled).
 
 Example:
 
@@ -70,8 +70,7 @@ sort_by: departure
 ui_refresh_seconds: 60
 ```
 
-`Updated` in each flight tile is shown as human-readable relative time and represents the
-last successful status retrieval from the provider.
+`Updated` in each flight tile reflects backend-provided update timestamps (stable display, no local ticking countdown).
 
 ## Build (for development)
 
@@ -87,3 +86,8 @@ The compiled file used by HACS is:
 
 This repo follows the integration contract:
 - https://github.com/tubloo/hacs-flight-status-tracker/blob/main/docs/cards_contract.md
+
+
+## Release Notes
+
+- `v1.0.7`: Reduced flicker by removing timer-driven `hass` pushes, targeting only integration flight entities (instead of scanning all sensors), and removing `now()`-driven template recomputation for progress/countdown/relative-age text.

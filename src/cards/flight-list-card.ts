@@ -24,9 +24,6 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
   private _config: ListConfig = {};
   private _hass?: HomeAssistant;
   private _card?: LovelaceCard;
-  private _latestHassForPush?: HomeAssistant;
-  private _nextPushTimer?: number;
-  private _lastUiPushMs = 0;
 
   setConfig(config: ListConfig): void {
     this._config = config || {};
@@ -36,54 +33,11 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
   set hass(hass: HomeAssistant | undefined) {
     this._hass = hass;
     if (!this._card || !hass) return;
-    this._latestHassForPush = hass;
-
-    const raw = this._config.ui_refresh_seconds;
-    const refreshSeconds =
-      typeof raw === "number" && Number.isFinite(raw) ? Math.max(0, Math.min(300, Math.floor(raw))) : 60;
-    if (refreshSeconds === 0) {
-      this._clearPushTimer();
-      this._card.hass = hass;
-      this._lastUiPushMs = Date.now();
-      return;
-    }
-
-    const now = Date.now();
-    const intervalMs = refreshSeconds * 1000;
-    const dueAt = this._lastUiPushMs + intervalMs;
-
-    if (this._lastUiPushMs === 0 || now >= dueAt) {
-      this._clearPushTimer();
-      this._card.hass = hass;
-      this._lastUiPushMs = now;
-      return;
-    }
-
-    if (!this._nextPushTimer) {
-      const waitMs = Math.max(50, dueAt - now);
-      this._nextPushTimer = window.setTimeout(() => {
-        this._nextPushTimer = undefined;
-        if (this._card && this._latestHassForPush) {
-          this._card.hass = this._latestHassForPush;
-          this._lastUiPushMs = Date.now();
-        }
-      }, waitMs);
-    }
+    this._card.hass = hass;
   }
 
   get hass(): HomeAssistant | undefined {
     return this._hass;
-  }
-
-  disconnectedCallback(): void {
-    this._clearPushTimer();
-  }
-
-  private _clearPushTimer(): void {
-    if (this._nextPushTimer) {
-      window.clearTimeout(this._nextPushTimer);
-      this._nextPushTimer = undefined;
-    }
   }
 
   private async buildCard(): Promise<void> {
@@ -108,13 +62,9 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
         {
           type: "custom:tailwindcss-template-card",
           content: `{% set max_flights = ${maxFlights ?? "none"} %}
-{% set entries = namespace(items=[]) %}
-{% for s in states.sensor %}
-  {% if s.attributes.flight_key is defined and s.attributes.flight_key  %}
-    {% set entries.items = entries.items + [s] %}
-  {% endif %}
-{% endfor %}
-{% set entries_sorted = entries.items | sort(attribute='${sortAttr}') %}
+{% set flight_entity_ids = state_attr('sensor.flight_status_tracker_upcoming_flights','flight_entity_ids') or [] %}
+{% set entries = expand(flight_entity_ids) | selectattr('attributes.flight_key', 'defined') | list %}
+{% set entries_sorted = entries | sort(attribute='${sortAttr}') %}
 {% if max_flights is not none %}
   {% set entries_display = entries_sorted[:max_flights] %}
 {% else %}
@@ -132,13 +82,9 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
           card_param: "cards",
           filter: {
             template: `{% set show_aircraft_image = ${showBackgroundImage ? "true" : "false"} %}
-{% set entries = namespace(items=[]) %}
-{% for s in states.sensor %}
-  {% if s.attributes.flight_key is defined and s.attributes.flight_key  %}
-    {% set entries.items = entries.items + [s] %}
-  {% endif %}
-{% endfor %}
-{% set entries = entries.items | sort(attribute='${sortAttr}') %}
+{% set flight_entity_ids = state_attr('sensor.flight_status_tracker_upcoming_flights','flight_entity_ids') or [] %}
+{% set entries = expand(flight_entity_ids) | selectattr('attributes.flight_key', 'defined') | list %}
+{% set entries = entries | sort(attribute='${sortAttr}') %}
 {% set max_flights = ${maxFlights ?? "none"} %}
 {% if max_flights is not none %}
   {% set entries = entries[:max_flights] %}
@@ -186,7 +132,7 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
 
   {%- set dep_tz = ui.dep_tz_short or dep_air.tz_short or '' -%}
   {%- set arr_tz = ui.arr_tz_short or arr_air.tz_short or '' -%}
-  {%- set viewer_tz = ui.viewer_tz_short or now().strftime('%Z') -%}
+  {%- set viewer_tz = ui.viewer_tz_short or '' -%}
 
   {%- set dep_viewer = ui.dep_viewer_time -%}
   {%- set arr_viewer = ui.arr_viewer_time -%}
@@ -206,12 +152,7 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
   {%- set position_line = ui.position_line -%}
   {%- set show_position_row = ui.show_position_row | default(false) -%}
 
-  {%- set progress_start = ui.progress_start_ts and as_datetime(ui.progress_start_ts) -%}
-  {%- set progress_end = ui.progress_end_ts and as_datetime(ui.progress_end_ts) -%}
-  {%- set now_dt = now() -%}
-  {%- set total = (progress_end and progress_start) and (as_timestamp(progress_end) - as_timestamp(progress_start)) -%}
-  {%- set elapsed = (progress_end and progress_start) and (as_timestamp(now_dt) - as_timestamp(progress_start)) -%}
-  {%- set pct = (total and elapsed) and (elapsed / total * 100) or (ui.route_progress_at_poll_pct or 0) -%}
+  {%- set pct = ui.route_progress_at_poll_pct or 0 -%}
   {%- if pct < 0 %}{% set pct = 0 %}{% endif -%}
   {%- if pct > 100 %}{% set pct = 100 %}{% endif -%}
 
@@ -258,36 +199,8 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
   {%- endif -%}
 
   {%- set remaining_label = None -%}
-  {%- set arr_target_dt = ui.arr_target_ts and as_datetime(ui.arr_target_ts) -%}
-  {%- if route_state == 'En Route' and arr_target_dt -%}
-    {%- set rem_sec = (as_timestamp(arr_target_dt) - as_timestamp(now_dt)) | round(0) -%}
-    {%- if rem_sec < 0 %}{% set rem_sec = 0 %}{% endif -%}
-    {%- set rem_min = (rem_sec / 60) | round(0) -%}
-    {%- set rem_h = (rem_min // 60) | int -%}
-    {%- set rem_m = (rem_min % 60) | int -%}
-    {%- if rem_h > 0 -%}
-      {%- set remaining_label = rem_h ~ "h " ~ rem_m ~ "m" -%}
-    {%- else -%}
-      {%- set remaining_label = rem_m ~ "m" -%}
-    {%- endif -%}
-  {%- endif -%}
 
-  {%- set updated_ago = ui.updated_ago_min -%}
-  {%- set updated_label = '—' -%}
-  {%- if updated_ago is number -%}
-    {%- set mins = updated_ago | int -%}
-    {%- if mins <= 0 -%}
-      {%- set updated_label = 'just now' -%}
-    {%- elif mins < 60 -%}
-      {%- set updated_label = mins ~ ' min ago' -%}
-    {%- elif mins < 1440 -%}
-      {%- set hrs = (mins / 60) | round(0, 'floor') | int -%}
-      {%- set updated_label = hrs ~ ' hr ago' -%}
-    {%- else -%}
-      {%- set days = (mins / 1440) | round(0, 'floor') | int -%}
-      {%- set updated_label = days ~ (' day ago' if days == 1 else ' days ago') -%}
-    {%- endif -%}
-  {%- endif -%}
+  {%- set updated_label = ui.updated_abs or '—' -%}
   {%- set source = ui.source or '—' -%}
   {%- set status_error_text = ui.status_error_text -%}
   {%- set show_error = status_error_text -%}
@@ -363,7 +276,6 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
 
     this._card = helpers.createCardElement(config);
     if (this._hass) this._card.hass = this._hass;
-    this._lastUiPushMs = Date.now();
     this.replaceChildren(this._card);
   }
 
