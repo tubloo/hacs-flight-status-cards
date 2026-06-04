@@ -58,32 +58,18 @@ class FlightStatusTrackerDiagnosticsCard extends HTMLElement implements Lovelace
           subtitle: "API usage, travel activity, active provider, and quick actions",
         },
         {
-          type: "glance",
-          title: "API Usage",
-          show_icon: false,
-          show_name: true,
-          show_state: true,
-          state_color: false,
-          columns: 4,
-          entities: [
-            { entity: "sensor.flight_status_tracker_api_calls_today", name: "Today" },
-            { entity: "sensor.flight_status_tracker_api_utility_meter", name: "Month" },
-            { entity: "sensor.flight_status_tracker_api_calls_this_year", name: "Year" },
-            { entity: "sensor.flight_status_tracker_api_calls", name: "Lifetime" },
-          ],
+          type: "markdown",
+          title: "Key Metrics",
+          content:
+            "| Metric | Today | Month | Year | Lifetime |\n" +
+            "| --- | ---: | ---: | ---: | ---: |\n" +
+            "| API | {{ states('sensor.flight_status_tracker_api_calls_today') }} | {{ states('sensor.flight_status_tracker_api_utility_meter') }} | {{ states('sensor.flight_status_tracker_api_calls_this_year') }} | {{ states('sensor.flight_status_tracker_api_calls') }} |\n" +
+            "| Flights | {{ states('sensor.flight_status_tracker_flights_today') }} | {{ states('sensor.flight_status_tracker_flights_this_month') }} | {{ states('sensor.flight_status_tracker_flights_this_year') }} | {{ states('sensor.flight_status_tracker_flights_lifetime') }} |\n" +
+            "| Distance | {{ states('sensor.flight_status_tracker_distance_today') }} | {{ states('sensor.flight_status_tracker_distance_this_month') }} | {{ states('sensor.flight_status_tracker_distance_this_year') }} | {{ states('sensor.flight_status_tracker_distance_lifetime') }} |",
         },
         {
           type: "statistics-graph",
-          title: "Daily API Trend (14d)",
-          chart_type: "line",
-          period: "day",
-          days_to_show: 14,
-          stat_types: ["sum"],
-          entities: ["sensor.flight_status_tracker_api_calls_today"],
-        },
-        {
-          type: "statistics-graph",
-          title: "Monthly API Trend (12mo)",
+          title: "API Trend (12mo)",
           chart_type: "line",
           period: "month",
           days_to_show: 365,
@@ -91,75 +77,57 @@ class FlightStatusTrackerDiagnosticsCard extends HTMLElement implements Lovelace
           entities: ["sensor.flight_status_tracker_api_utility_meter"],
         },
         {
-          type: "glance",
-          title: "Flight Counts",
-          show_icon: false,
-          show_name: true,
-          show_state: true,
-          state_color: false,
-          columns: 4,
-          entities: [
-            { entity: "sensor.flight_status_tracker_flights_today", name: "Today" },
-            { entity: "sensor.flight_status_tracker_flights_this_month", name: "Month" },
-            { entity: "sensor.flight_status_tracker_flights_this_year", name: "Year" },
-            { entity: "sensor.flight_status_tracker_flights_lifetime", name: "Lifetime" },
+          type: "custom:apexcharts-card",
+          graph_span: "365d",
+          span: { end: "month" },
+          header: {
+            show: true,
+            title: "Flights + Distance (12mo)",
+            show_states: false,
+          },
+          yaxis: [
+            {
+              id: "flights",
+              decimals: 0,
+              min: 0,
+              apex_config: { title: { text: "Flights" }, tickAmount: 4 },
+            },
+            {
+              id: "distance",
+              opposite: true,
+              decimals: 0,
+              min: 0,
+              apex_config: { title: { text: "Distance" }, tickAmount: 4 },
+            },
           ],
-        },
-        {
-          type: "statistics-graph",
-          title: "Daily Flights Trend (14d)",
-          chart_type: "line",
-          period: "day",
-          days_to_show: 14,
-          stat_types: ["sum"],
-          entities: ["sensor.flight_status_tracker_flights_today"],
-        },
-        {
-          type: "statistics-graph",
-          title: "Monthly Flights Trend (12mo)",
-          chart_type: "line",
-          period: "month",
-          days_to_show: 365,
-          stat_types: ["sum"],
-          entities: ["sensor.flight_status_tracker_flights_this_month"],
-        },
-        {
-          type: "glance",
-          title: "Distance Totals",
-          show_icon: false,
-          show_name: true,
-          show_state: true,
-          state_color: false,
-          columns: 4,
-          entities: [
-            { entity: "sensor.flight_status_tracker_distance_today", name: "Today" },
-            { entity: "sensor.flight_status_tracker_distance_this_month", name: "Month" },
-            { entity: "sensor.flight_status_tracker_distance_this_year", name: "Year" },
-            { entity: "sensor.flight_status_tracker_distance_lifetime", name: "Lifetime" },
+          series: [
+            {
+              entity: "sensor.flight_status_tracker_flights_this_month",
+              name: "Flights",
+              type: "column",
+              yaxis_id: "flights",
+              statistics: { type: "sum", period: "month", align: "end" },
+            },
+            {
+              entity: "sensor.flight_status_tracker_distance_this_month",
+              name: "Distance",
+              type: "line",
+              yaxis_id: "distance",
+              statistics: { type: "sum", period: "month", align: "end" },
+              stroke_width: 3,
+            },
           ],
-        },
-        {
-          type: "statistics-graph",
-          title: "Daily Distance Trend (14d)",
-          chart_type: "line",
-          period: "day",
-          days_to_show: 14,
-          stat_types: ["sum"],
-          entities: ["sensor.flight_status_tracker_distance_today"],
-        },
-        {
-          type: "statistics-graph",
-          title: "Monthly Distance Trend (12mo)",
-          chart_type: "line",
-          period: "month",
-          days_to_show: 365,
-          stat_types: ["sum"],
-          entities: ["sensor.flight_status_tracker_distance_this_month"],
         },
         {
           type: "markdown",
-          title: "Active Provider",
-          content: "{% set provider = state_attr('sensor.flight_status_tracker_api_calls', 'provider') or 'unknown' %}{% set total = state_attr('sensor.flight_status_tracker_api_calls', 'provider_total') or 0 %}{% set flows = state_attr('sensor.flight_status_tracker_api_calls', 'provider_flows') or {} %}**Provider:** {{ provider | title }}  \n**Total Calls:** {{ total }}  \n**Schedule:** {{ flows.get('schedule', 0) }}  \n**Status:** {{ flows.get('status', 0) }}  \n**Position:** {{ flows.get('position', 0) }}  \n**Directory:** {{ flows.get('directory', 0) }}",
+          title: "Provider Summary",
+          content:
+            "{% set providers = state_attr('sensor.flight_status_tracker_api_calls', 'providers') or {} %}" +
+            "| Provider | Preview | Status | Position | Directory | Total |\n" +
+            "| --- | ---: | ---: | ---: | ---: | ---: |\n" +
+            "{% for provider, stats in providers.items() %}" +
+            "| {{ provider | title }} | {{ stats.get('schedule', 0) }} | {{ stats.get('status', 0) }} | {{ stats.get('position', 0) }} | {{ stats.get('directory', 0) }} | {{ stats.get('total', 0) }} |\n" +
+            "{% endfor %}",
         },
         {
           type: "entities",
