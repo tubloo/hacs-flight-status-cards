@@ -2,6 +2,7 @@ import { HomeAssistant, LovelaceCard } from "../types";
 
 interface DiagnosticsConfig {
   title?: string;
+  api_graph_style?: "bar" | "line" | "area";
 }
 
 type CardHelpers = {
@@ -48,6 +49,11 @@ class FlightStatusTrackerDiagnosticsCard extends HTMLElement implements Lovelace
 
     const helpers = await windowWithHelpers.loadCardHelpers();
     const title = this._config.title || "Diagnostics";
+    const apiGraphStyle =
+      this._config.api_graph_style === "line" || this._config.api_graph_style === "area"
+        ? this._config.api_graph_style
+        : "bar";
+    const apiSeriesType = apiGraphStyle === "bar" ? "column" : apiGraphStyle;
 
     const config: Record<string, unknown> = {
       type: "vertical-stack",
@@ -68,13 +74,42 @@ class FlightStatusTrackerDiagnosticsCard extends HTMLElement implements Lovelace
             "| Distance | {{ states('sensor.flight_status_tracker_distance_today') }} | {{ states('sensor.flight_status_tracker_distance_this_month') }} | {{ states('sensor.flight_status_tracker_distance_this_year') }} | {{ states('sensor.flight_status_tracker_distance_lifetime') }} |",
         },
         {
-          type: "statistics-graph",
-          title: "API Trend (12mo)",
-          chart_type: "line",
-          period: "month",
-          days_to_show: 365,
-          stat_types: ["sum"],
-          entities: ["sensor.flight_status_tracker_api_utility_meter"],
+          type: "custom:apexcharts-card",
+          graph_span: "30d",
+          span: { end: "day" },
+          header: {
+            show: true,
+            title: "API Trend (30d)",
+            show_states: false,
+          },
+          series: [
+            {
+              entity: "sensor.flight_status_tracker_api_calls_today",
+              name: "API Calls",
+              type: apiSeriesType,
+              group_by: { func: "max", duration: "1d" },
+              stroke_width: apiGraphStyle === "bar" ? 0 : 3,
+            },
+          ],
+        },
+        {
+          type: "custom:apexcharts-card",
+          graph_span: "365d",
+          span: { end: "month" },
+          header: {
+            show: true,
+            title: "API Trend (12mo)",
+            show_states: false,
+          },
+          series: [
+            {
+              entity: "sensor.flight_status_tracker_api_utility_meter",
+              name: "API Calls",
+              type: apiSeriesType,
+              group_by: { func: "max", duration: "1mo" },
+              stroke_width: apiGraphStyle === "bar" ? 0 : 3,
+            },
+          ],
         },
         {
           type: "custom:apexcharts-card",

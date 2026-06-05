@@ -119,6 +119,38 @@ class FlightStatusTrackerRemoveCardEditor extends BaseFlightStatusEditor {
 
 class FlightStatusTrackerDiagnosticsCardEditor extends BaseFlightStatusEditor {
   protected _defaultTitle = "Diagnostics";
+
+  protected render(): void {
+    const title = String(this._config.title || this._defaultTitle || "");
+    const apiGraphStyle =
+      this._config.api_graph_style === "line" || this._config.api_graph_style === "area"
+        ? String(this._config.api_graph_style)
+        : "bar";
+
+    this.innerHTML = `
+      <div style="padding: 12px;">
+        <label style="display:block;font-weight:600;margin-bottom:6px;">${this._titleLabel}</label>
+        <input id="title" type="text" value="${title.replace(/"/g, "&quot;")}" style="width:100%;padding:8px;box-sizing:border-box;" />
+        <label style="display:block;font-weight:500;margin-top:10px;margin-bottom:6px;">API graph style</label>
+        <select id="api_graph_style" style="width:100%;padding:8px;box-sizing:border-box;">
+          <option value="bar" ${apiGraphStyle === "bar" ? "selected" : ""}>Bar</option>
+          <option value="line" ${apiGraphStyle === "line" ? "selected" : ""}>Line</option>
+          <option value="area" ${apiGraphStyle === "area" ? "selected" : ""}>Area</option>
+        </select>
+      </div>
+    `;
+
+    this.querySelector("#title")?.addEventListener("input", (event) => {
+      const value = (event.target as HTMLInputElement).value;
+      this.updateConfig({ title: value });
+    });
+    this.querySelector("#api_graph_style")?.addEventListener("change", (event) => {
+      const value = (event.target as HTMLSelectElement).value;
+      this.updateConfig({
+        api_graph_style: value === "line" || value === "area" ? value : "bar",
+      });
+    });
+  }
 }
 
 if (!customElements.get("flight-status-tracker-list-card-editor")) {
