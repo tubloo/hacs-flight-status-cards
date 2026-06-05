@@ -58,29 +58,23 @@ class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
           subtitle: "Enter airline + number + date, then search and add",
         },
         {
-          type: "vertical-stack",
-          cards: [
-            {
-              type: "horizontal-stack",
-              cards: [
-                { type: "entities", show_header_toggle: false, entities: [{ entity: "text.flight_status_tracker_add_flight_airline", name: "Airline code (e.g. EK)" }] },
-                { type: "entities", show_header_toggle: false, entities: [{ entity: "text.flight_status_tracker_add_flight_number", name: "Flight number (e.g. 236)" }] },
-              ],
-            },
-            {
-              type: "horizontal-stack",
-              cards: [
-                { type: "entities", show_header_toggle: false, entities: [{ entity: "date.flight_status_tracker_add_flight_date", name: "Date" }] },
-                { type: "entities", show_header_toggle: false, entities: [{ entity: "text.flight_status_tracker_add_flight_dep_airport", name: "Dep airport (optional)" }] },
-              ],
-            },
-            {
-              type: "horizontal-stack",
-              cards: [
-                { type: "entities", show_header_toggle: false, entities: [{ entity: "text.flight_status_tracker_add_flight_travellers", name: "Travellers (optional)" }] },
-                { type: "entities", show_header_toggle: false, entities: [{ entity: "text.flight_status_tracker_add_flight_notes", name: "Notes (optional)" }] },
-              ],
-            },
+          type: "entities",
+          title: "Flight Details",
+          show_header_toggle: false,
+          entities: [
+            { entity: "text.flight_status_tracker_add_flight_airline", name: "Airline code (e.g. EK)" },
+            { entity: "text.flight_status_tracker_add_flight_number", name: "Flight number (e.g. 236)" },
+            { entity: "date.flight_status_tracker_add_flight_date", name: "Date" },
+            { entity: "text.flight_status_tracker_add_flight_dep_airport", name: "Departure airport (optional)" },
+          ],
+        },
+        {
+          type: "entities",
+          title: "Optional Details",
+          show_header_toggle: false,
+          entities: [
+            { entity: "text.flight_status_tracker_add_flight_travellers", name: "Travellers (optional)" },
+            { entity: "text.flight_status_tracker_add_flight_notes", name: "Notes (optional)" },
           ],
         },
         {
