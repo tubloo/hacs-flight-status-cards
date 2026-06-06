@@ -69,7 +69,7 @@ class FlightStatusTrackerDiagnosticsCard extends HTMLElement implements Lovelace
           content:
             "| Metric | Today | Month | Year | Lifetime |\n" +
             "| --- | ---: | ---: | ---: | ---: |\n" +
-            "| API | {{ states('sensor.flight_status_tracker_api_calls_today') }} | {{ states('sensor.flight_status_tracker_api_utility_meter') }} | {{ states('sensor.flight_status_tracker_api_calls_this_year') }} | {{ states('sensor.flight_status_tracker_api_calls') }} |\n" +
+            "| API | {{ states('sensor.flight_status_tracker_api_calls_today') }} | {{ states('sensor.flight_status_tracker_api_calls_this_month') }} | {{ states('sensor.flight_status_tracker_api_calls_this_year') }} | {{ states('sensor.flight_status_tracker_api_calls') }} |\n" +
             "| Flights | {{ states('sensor.flight_status_tracker_flights_today') }} | {{ states('sensor.flight_status_tracker_flights_this_month') }} | {{ states('sensor.flight_status_tracker_flights_this_year') }} | {{ states('sensor.flight_status_tracker_flights_lifetime') }} |\n" +
             "| Distance | {{ states('sensor.flight_status_tracker_distance_today') }} | {{ states('sensor.flight_status_tracker_distance_this_month') }} | {{ states('sensor.flight_status_tracker_distance_this_year') }} | {{ states('sensor.flight_status_tracker_distance_lifetime') }} |",
         },
@@ -103,7 +103,7 @@ class FlightStatusTrackerDiagnosticsCard extends HTMLElement implements Lovelace
           },
           series: [
             {
-              entity: "sensor.flight_status_tracker_api_utility_meter",
+              entity: "sensor.flight_status_tracker_api_calls_this_month",
               name: "API Calls",
               type: apiSeriesType,
               group_by: { func: "max", duration: "1mo" },
