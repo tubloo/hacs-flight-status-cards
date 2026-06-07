@@ -104,11 +104,11 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
   {%- set badge = 'bg-gray-600 text-white' -%}
   {%- set route_color = 'text-gray-400' -%}
   {%- set time_color = 'text-gray-300' -%}
-  {%- if badge_key == 'critical' -%}
+  {%- if badge_key == 'critical' or route_state in ['Cancelled', 'Diverted'] -%}
     {%- set badge = 'bg-red-800 text-white' -%}
     {%- set route_color = 'text-red-700' -%}
     {%- set time_color = 'text-red-600' -%}
-  {%- elif badge_key == 'ok' -%}
+  {%- elif badge_key == 'ok' or route_state == 'Arrived' -%}
     {%- set badge = 'bg-emerald-800 text-white' -%}
     {%- set route_color = 'text-emerald-700' -%}
     {%- set time_color = 'text-emerald-600' -%}
@@ -248,7 +248,9 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
   {
     "type": "custom:tailwindcss-template-card",
     "entity": "{{ s.entity_id }}",
-    "content": "<div class='relative overflow-hidden rounded-2xl bg-[rgba(255,255,255,0.04)] p-4 space-y-3'>\\
+    "content": "<div class='relative overflow-hidden rounded-2xl bg-[rgba(255,255,255,0.04)]'>\\
+    <div class='h-2 {{ route_bg }}'></div>\\
+    <div class='p-4 space-y-3'>\\
     {% if show_aircraft_image and aircraft_image %}<img src='{{ aircraft_image }}' class='pointer-events-none absolute inset-0 w-full h-full object-cover object-center opacity-[0.24]' />{% endif %}\\
     {% if show_aircraft_image and aircraft_image %}<div class='absolute inset-0 bg-[rgba(255,255,255,0.55)] dark:bg-[rgba(0,0,0,0.45)] pointer-events-none'></div>{% endif %}\\
     <div class='relative z-[1]'>\\
@@ -300,6 +302,7 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
     {% endif %}\\
     <div class='text-xs opacity-60'>Updated {{ updated_label }} · Source: {{ source }}</div>\\
     <div class='text-xs font-semibold text-sky-300'>Next update: {{ next_update_label }}</div>\\
+    </div>\\
     </div>\\
   </div>"
   }{{ "," if not loop.last else "" }}
