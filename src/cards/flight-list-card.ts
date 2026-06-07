@@ -216,6 +216,25 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
       {%- set updated_label = days ~ (' day ago' if days == 1 else ' days ago') -%}
     {%- endif -%}
   {%- endif -%}
+  {%- set next_update_in = ui.next_update_in_min -%}
+  {%- set next_update_label = '—' -%}
+  {%- if route_state in ['Arrived', 'Cancelled'] -%}
+    {%- set next_update_label = 'No further updates' -%}
+  {%- elif next_update_in is number -%}
+    {%- set mins = next_update_in | int -%}
+    {%- if mins <= 0 -%}
+      {%- set next_update_label = 'due now' -%}
+    {%- elif mins < 60 -%}
+      {%- set next_update_label = 'in ' ~ mins ~ ' min' -%}
+    {%- elif mins < 1440 -%}
+      {%- set hrs = (mins / 60) | round(0, 'floor') | int -%}
+      {%- set rem = mins % 60 -%}
+      {%- set next_update_label = 'in ' ~ hrs ~ ' hr' ~ (' ' ~ rem ~ ' min' if rem else '') -%}
+    {%- else -%}
+      {%- set days = (mins / 1440) | round(0, 'floor') | int -%}
+      {%- set next_update_label = 'in ' ~ days ~ (' day' if days == 1 else ' days') -%}
+    {%- endif -%}
+  {%- endif -%}
   {%- set source = ui.source or '—' -%}
   {%- set status_error_text = ui.status_error_text -%}
   {%- set show_error = status_error_text -%}
@@ -280,6 +299,7 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
     </div>\\
     {% endif %}\\
     <div class='text-xs opacity-60'>Updated {{ updated_label }} · Source: {{ source }}</div>\\
+    <div class='text-xs font-semibold text-sky-300'>Next update: {{ next_update_label }}</div>\\
     </div>\\
   </div>"
   }{{ "," if not loop.last else "" }}
