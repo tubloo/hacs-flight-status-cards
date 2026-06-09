@@ -251,7 +251,7 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
     "entity": "{{ s.entity_id }}",
     "content": "<div class='relative overflow-hidden rounded-2xl bg-[rgba(255,255,255,0.04)]'>\\
     <div class='h-2 {{ route_bg }}'></div>\\
-    <div class='p-4 space-y-3'>\\
+    <div class='px-4 pt-3 pb-4 space-y-3'>\\
     {% if show_aircraft_image and aircraft_image %}<img src='{{ aircraft_image }}' class='pointer-events-none absolute inset-0 w-full h-full object-cover object-center opacity-[0.24]' />{% endif %}\\
     {% if show_aircraft_image and aircraft_image %}<div class='absolute inset-0 bg-[rgba(255,255,255,0.55)] dark:bg-[rgba(0,0,0,0.45)] pointer-events-none'></div>{% endif %}\\
     <div class='relative z-[1]'>\\
@@ -261,10 +261,13 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
         <div class='text-lg'>{{ f.airline_code }} {{ f.flight_number }} · {{ dep_date_display }}</div>\\
         <div class='text-sm opacity-80'>{{ airline_name }}{% if f.aircraft_type %} · {{ f.aircraft_type }}{% endif %}{% if f.duration_minutes is not none %} · {{ (f.duration_minutes or 0) // 60 }}h {{ (f.duration_minutes or 0) % 60 }}m{% endif %}</div>\\
       </div>\\
-      <span class='text-xs px-2 py-1 rounded-full {{ badge }} text-center'>\\
-        <div class='leading-tight'>{{ state }}</div>\\
-        {% if remaining_label %}<div class='leading-tight opacity-90'>{{ remaining_label }} left</div>{% endif %}\\
-      </span>\\
+      <div class='shrink-0 text-center'>\\
+        <span class='text-xs px-2 py-1 rounded-full {{ badge }} inline-block'>\\
+          <div class='leading-tight'>{{ state }}</div>\\
+          {% if remaining_label %}<div class='leading-tight opacity-90'>{{ remaining_label }} left</div>{% endif %}\\
+        </span>\\
+        {% if raw_status %}<div class='text-[11px] mt-1 font-medium {{ route_color }}'>{{ raw_status }}</div>{% endif %}\
+      </div>\\
     </div>\\
     <div class='flex items-center gap-2 flex-nowrap'>\\
       <div class='text-xl sm:text-2xl font-semibold shrink-0 whitespace-nowrap'>{{ dep_code }}</div>\\
