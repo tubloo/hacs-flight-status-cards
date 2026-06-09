@@ -100,6 +100,7 @@ class FlightStatusTrackerListCard extends HTMLElement implements LovelaceCard {
   {%- set badge_key = ui.badge_key or 'neutral' -%}
   {%- set state = ui.state_label or (f.status_state or 'Unknown') -%}
   {%- set route_state = ui.route_state or state -%}
+  {%- set raw_status = ui.provider_state_label -%}
 
   {%- set badge = 'bg-gray-600 text-white' -%}
   {%- set route_color = 'text-gray-400' -%}
