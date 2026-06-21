@@ -1,6 +1,6 @@
 {
   "name": "hacs-flight-status-cards",
-  "version": "1.1.9",
+  "version": "1.1.10",
   "private": false,
   "type": "module",
   "description": "Lovelace cards for Flight Status Tracker",

@@ -53,7 +53,16 @@ class FlightStatusTrackerDiagnosticsCard extends HTMLElement implements Lovelace
       this._config.api_graph_style === "line" || this._config.api_graph_style === "area"
         ? this._config.api_graph_style
         : "bar";
-    const apiSeriesType = apiGraphStyle === "bar" ? "column" : apiGraphStyle;
+    const apiSeriesType = apiGraphStyle === "area" ? "area" : "column";
+    const apiStrokeWidth = apiGraphStyle === "area" ? 2 : 0;
+    const apiFlowSeries = [
+      { key: "provider_flow_status", name: "Status" },
+      { key: "provider_flow_schedule", name: "Schedule" },
+      { key: "provider_flow_directory", name: "Directory" },
+      { key: "provider_flow_position", name: "Position" },
+      { key: "provider_flow_usage", name: "Usage" },
+      { key: "provider_flow_other", name: "Other" },
+    ];
 
     const config: Record<string, unknown> = {
       type: "vertical-stack",
@@ -79,18 +88,20 @@ class FlightStatusTrackerDiagnosticsCard extends HTMLElement implements Lovelace
           span: { end: "day" },
           header: {
             show: true,
-            title: "API Trend (30d)",
+            title: "API Trend by Flow (30d)",
             show_states: false,
           },
-          series: [
-            {
-              entity: "sensor.flight_status_tracker_api_calls_today",
-              name: "API Calls",
-              type: apiSeriesType,
-              group_by: { func: "max", duration: "1d" },
-              stroke_width: apiGraphStyle === "bar" ? 0 : 3,
-            },
-          ],
+          apex_config: {
+            chart: { stacked: true },
+          },
+          series: apiFlowSeries.map((series) => ({
+            entity: "sensor.flight_status_tracker_api_calls_today",
+            attribute: series.key,
+            name: series.name,
+            type: apiSeriesType,
+            group_by: { func: "max", duration: "1d" },
+            stroke_width: apiStrokeWidth,
+          })),
         },
         {
           type: "custom:apexcharts-card",
@@ -98,18 +109,20 @@ class FlightStatusTrackerDiagnosticsCard extends HTMLElement implements Lovelace
           span: { end: "month" },
           header: {
             show: true,
-            title: "API Trend (12mo)",
+            title: "API Trend by Flow (12mo)",
             show_states: false,
           },
-          series: [
-            {
-              entity: "sensor.flight_status_tracker_api_calls_this_month",
-              name: "API Calls",
-              type: apiSeriesType,
-              group_by: { func: "max", duration: "1mo" },
-              stroke_width: apiGraphStyle === "bar" ? 0 : 3,
-            },
-          ],
+          apex_config: {
+            chart: { stacked: true },
+          },
+          series: apiFlowSeries.map((series) => ({
+            entity: "sensor.flight_status_tracker_api_calls_this_month",
+            attribute: series.key,
+            name: series.name,
+            type: apiSeriesType,
+            group_by: { func: "max", duration: "1mo" },
+            stroke_width: apiStrokeWidth,
+          })),
         },
         {
           type: "custom:apexcharts-card",

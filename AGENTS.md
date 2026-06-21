@@ -27,6 +27,7 @@ This file defines default instructions for AI coding assistants working in this 
   - `flight-status-tracker-diagnostics-card`
 - `flight-status-tracker-list-card` renders from per-flight entity attributes, especially `attributes.flight` and `attributes.ui`; keep template expectations aligned with the integration schema.
 - The list card currently expects refresh-facing UI fields such as `updated_ago_min`, `next_update_in_min`, `next_update_abs`, `status_error_text`, and `source` inside `ui`.
+- The diagnostics card expects API period sensors to expose totals plus flow-breakdown attributes (`by_flow`, `provider_flows`, `flow_*`, `provider_flow_*`) so the API trend charts can render stacked series by flow.
 - `Next update` belongs on its own line below `Updated`. For terminal flights such as Arrived/Cancelled, the card should render `No further updates` rather than implying another poll is scheduled.
 - Default entity IDs should match the integration defaults when possible.
 - Prefer configurable entity IDs in card config for flexibility.
