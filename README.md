@@ -90,6 +90,7 @@ This repo follows the integration contract:
 
 ## Release Notes
 
+- `v1.1.15`: Show `-` on one side of Add Flight preview rows when the other side has data, while still hiding entire rows when both sides are empty.
 - `v1.1.14`: Hide Add Flight secondary local-time rows when they would duplicate the airport-local primary row, while still showing the secondary row when timezone or date context adds information.
 - `v1.1.13`: Reordered Add Flight preview rows so changed scheduled times render immediately below the airport-local primary time, kept Home Assistant-local time as the secondary row, and removed visible placeholder artifacts on empty cells.
 - `v1.1.12`: Add Flight preview now shows airport-local times as the primary row and Home Assistant-local times as a secondary row, appending the local date in parentheses only when it differs from the airport-local date.
