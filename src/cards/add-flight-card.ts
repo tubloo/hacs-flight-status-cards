@@ -117,10 +117,10 @@ class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
 {% set route_state = 'Scheduled' if raw_state|lower == 'unknown' else raw_state %}
 {% set state = route_state %}
 
-{% set dep_primary_src = dep.get('actual_viewer_local') or dep.get('estimated_viewer_local') or dep.get('scheduled_viewer_local') or dep.get('actual_local') or dep.get('estimated_local') or dep.get('scheduled_local') or dep.get('actual') or dep.get('estimated') or dep.get('scheduled') %}
-{% set arr_primary_src = arr.get('actual_viewer_local') or arr.get('estimated_viewer_local') or arr.get('scheduled_viewer_local') or arr.get('actual_local') or arr.get('estimated_local') or arr.get('scheduled_local') or arr.get('actual') or arr.get('estimated') or arr.get('scheduled') %}
-{% set dep_sched_src = dep.get('scheduled_viewer_local') or dep.get('scheduled_local') or dep.get('scheduled') %}
-{% set arr_sched_src = arr.get('scheduled_viewer_local') or arr.get('scheduled_local') or arr.get('scheduled') %}
+{% set dep_primary_src = dep.get('actual_local') or dep.get('estimated_local') or dep.get('scheduled_local') or dep.get('actual') or dep.get('estimated') or dep.get('scheduled') %}
+{% set arr_primary_src = arr.get('actual_local') or arr.get('estimated_local') or arr.get('scheduled_local') or arr.get('actual') or arr.get('estimated') or arr.get('scheduled') %}
+{% set dep_sched_src = dep.get('scheduled_local') or dep.get('scheduled') %}
+{% set arr_sched_src = arr.get('scheduled_local') or arr.get('scheduled') %}
 {% set dep_primary = dep_primary_src and (dep_primary_src|string).replace(' ','T').split('T')[1][:5] or '—' %}
 {% set arr_primary = arr_primary_src and (arr_primary_src|string).replace(' ','T').split('T')[1][:5] or '—' %}
 {% set dep_strike = dep_sched_src and (dep_sched_src|string).replace(' ','T').split('T')[1][:5] or none %}
@@ -129,8 +129,21 @@ class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
 {% set arr_changed = arr_primary != '—' and arr_strike and arr_primary != arr_strike %}
 {% set show_strike_row = dep_changed or arr_changed %}
 
-{% set dep_tz = dep_primary_src and as_datetime(dep_primary_src).strftime('%Z') or dep_air.get('tz_short') or '' %}
-{% set arr_tz = arr_primary_src and as_datetime(arr_primary_src).strftime('%Z') or arr_air.get('tz_short') or '' %}
+{% set dep_viewer_src = dep.get('actual_viewer_local') or dep.get('estimated_viewer_local') or dep.get('scheduled_viewer_local') %}
+{% set arr_viewer_src = arr.get('actual_viewer_local') or arr.get('estimated_viewer_local') or arr.get('scheduled_viewer_local') %}
+{% set viewer_tz = now().strftime('%Z') or (dep_viewer_src and as_datetime(dep_viewer_src).strftime('%Z')) or '' %}
+{% set dep_viewer = dep_viewer_src and (dep_viewer_src|string).replace(' ','T').split('T')[1][:5] or none %}
+{% set arr_viewer = arr_viewer_src and (arr_viewer_src|string).replace(' ','T').split('T')[1][:5] or none %}
+{% set dep_local_date = dep_primary_src and as_datetime(dep_primary_src).strftime('%d %b') or none %}
+{% set arr_local_date = arr_primary_src and as_datetime(arr_primary_src).strftime('%d %b') or none %}
+{% set dep_viewer_date = dep_viewer_src and as_datetime(dep_viewer_src).strftime('%d %b') or none %}
+{% set arr_viewer_date = arr_viewer_src and as_datetime(arr_viewer_src).strftime('%d %b') or none %}
+{% set dep_viewer_suffix = ' (' ~ dep_viewer_date ~ ')' if dep_viewer and dep_local_date and dep_viewer_date and dep_viewer_date != dep_local_date else '' %}
+{% set arr_viewer_suffix = ' (' ~ arr_viewer_date ~ ')' if arr_viewer and arr_local_date and arr_viewer_date and arr_viewer_date != arr_local_date else '' %}
+{% set show_viewer_row = dep_viewer or arr_viewer %}
+
+{% set dep_tz = dep_air.get('tz_short') or (dep_primary_src and as_datetime(dep_primary_src).strftime('%Z')) or '' %}
+{% set arr_tz = arr_air.get('tz_short') or (arr_primary_src and as_datetime(arr_primary_src).strftime('%Z')) or '' %}
 {% set dep_city = dep_air.get('city') or dep_air.get('name') or dep_code %}
 {% set arr_city = arr_air.get('city') or arr_air.get('name') or arr_code %}
 {% set dep_date_display = dep_primary_src and as_datetime(dep_primary_src).strftime('%d %b (%a)') or '—' %}
@@ -225,6 +238,10 @@ class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
       <div class='opacity-70'>{{ 'Departed' if dep.get('actual') else 'Scheduled Departure' }}</div><div class='opacity-70'>{{ 'Estimated Arrival' if (arr.get('actual') or arr.get('estimated')) else 'Scheduled Arrival' }}</div>
       <div class='text-2xl font-semibold {{ time_color }}'>{{ dep_primary }}<span class='text-xs opacity-70 ml-1'>{{ dep_tz }}</span></div>
       <div class='text-2xl font-semibold {{ time_color }}'>{{ arr_primary }}<span class='text-xs opacity-70 ml-1'>{{ arr_tz }}</span></div>
+      {% if show_viewer_row %}
+      <div class='opacity-70 {% if not dep_viewer %}opacity-0{% endif %}'>{% if dep_viewer %}{{ dep_viewer }} {{ viewer_tz }}{{ dep_viewer_suffix }}{% else %}&nbsp;{% endif %}</div>
+      <div class='opacity-70 {% if not arr_viewer %}opacity-0{% endif %}'>{% if arr_viewer %}{{ arr_viewer }} {{ viewer_tz }}{{ arr_viewer_suffix }}{% else %}&nbsp;{% endif %}</div>
+      {% endif %}
       {% if show_strike_row %}
       <div class='line-through opacity-50 {% if not dep_changed %}opacity-0{% endif %}'>{% if dep_changed %}{{ dep_strike }}{% else %}&nbsp;{% endif %}</div>
       <div class='line-through opacity-50 {% if not arr_changed %}opacity-0{% endif %}'>{% if arr_changed %}{{ arr_strike }}{% else %}&nbsp;{% endif %}</div>
