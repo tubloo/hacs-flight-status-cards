@@ -90,6 +90,7 @@ This repo follows the integration contract:
 
 ## Release Notes
 
+- `v1.1.13`: Reordered Add Flight preview rows so changed scheduled times render immediately below the airport-local primary time, kept Home Assistant-local time as the secondary row, and removed visible placeholder artifacts on empty cells.
 - `v1.1.12`: Add Flight preview now shows airport-local times as the primary row and Home Assistant-local times as a secondary row, appending the local date in parentheses only when it differs from the airport-local date.
 - `v1.1.11`: Add Flight preview now prefers Home Assistant-local `*_viewer_local` timestamps so card times match the integration timezone instead of airport-local preview fields.
 - `v1.0.8`: Restored relative "Updated" label format (min/hr/day ago) while keeping non-live rendering to avoid flicker from time-tick rerenders.

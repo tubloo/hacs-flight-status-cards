@@ -238,13 +238,13 @@ class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
       <div class='opacity-70'>{{ 'Departed' if dep.get('actual') else 'Scheduled Departure' }}</div><div class='opacity-70'>{{ 'Estimated Arrival' if (arr.get('actual') or arr.get('estimated')) else 'Scheduled Arrival' }}</div>
       <div class='text-2xl font-semibold {{ time_color }}'>{{ dep_primary }}<span class='text-xs opacity-70 ml-1'>{{ dep_tz }}</span></div>
       <div class='text-2xl font-semibold {{ time_color }}'>{{ arr_primary }}<span class='text-xs opacity-70 ml-1'>{{ arr_tz }}</span></div>
-      {% if show_viewer_row %}
-      <div class='opacity-70 {% if not dep_viewer %}opacity-0{% endif %}'>{% if dep_viewer %}{{ dep_viewer }} {{ viewer_tz }}{{ dep_viewer_suffix }}{% else %}&nbsp;{% endif %}</div>
-      <div class='opacity-70 {% if not arr_viewer %}opacity-0{% endif %}'>{% if arr_viewer %}{{ arr_viewer }} {{ viewer_tz }}{{ arr_viewer_suffix }}{% else %}&nbsp;{% endif %}</div>
-      {% endif %}
       {% if show_strike_row %}
-      <div class='line-through opacity-50 {% if not dep_changed %}opacity-0{% endif %}'>{% if dep_changed %}{{ dep_strike }}{% else %}&nbsp;{% endif %}</div>
-      <div class='line-through opacity-50 {% if not arr_changed %}opacity-0{% endif %}'>{% if arr_changed %}{{ arr_strike }}{% else %}&nbsp;{% endif %}</div>
+      <div class='line-through opacity-50'>{% if dep_changed %}{{ dep_strike }}{% else %}<span class='block min-h-[1.25rem]'></span>{% endif %}</div>
+      <div class='line-through opacity-50'>{% if arr_changed %}{{ arr_strike }}{% else %}<span class='block min-h-[1.25rem]'></span>{% endif %}</div>
+      {% endif %}
+      {% if show_viewer_row %}
+      <div class='opacity-70'>{% if dep_viewer %}{{ dep_viewer }} {{ viewer_tz }}{{ dep_viewer_suffix }}{% else %}<span class='block min-h-[1.25rem]'></span>{% endif %}</div>
+      <div class='opacity-70'>{% if arr_viewer %}{{ arr_viewer }} {{ viewer_tz }}{{ arr_viewer_suffix }}{% else %}<span class='block min-h-[1.25rem]'></span>{% endif %}</div>
       {% endif %}
       {% if show_term_gate_row %}
       <div class='opacity-70'>{{ dep_term_gate }}</div>
