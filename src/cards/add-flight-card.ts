@@ -140,10 +140,12 @@ class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
 {% set arr_viewer_date = arr_viewer_src and as_datetime(arr_viewer_src).strftime('%d %b') or none %}
 {% set dep_viewer_suffix = ' (' ~ dep_viewer_date ~ ')' if dep_viewer and dep_local_date and dep_viewer_date and dep_viewer_date != dep_local_date else '' %}
 {% set arr_viewer_suffix = ' (' ~ arr_viewer_date ~ ')' if arr_viewer and arr_local_date and arr_viewer_date and arr_viewer_date != arr_local_date else '' %}
-{% set show_viewer_row = dep_viewer or arr_viewer %}
 
 {% set dep_tz = dep_air.get('tz_short') or (dep_primary_src and as_datetime(dep_primary_src).strftime('%Z')) or '' %}
 {% set arr_tz = arr_air.get('tz_short') or (arr_primary_src and as_datetime(arr_primary_src).strftime('%Z')) or '' %}
+{% set dep_show_viewer = dep_viewer and not (dep_viewer == dep_primary and viewer_tz == dep_tz and not dep_viewer_suffix) %}
+{% set arr_show_viewer = arr_viewer and not (arr_viewer == arr_primary and viewer_tz == arr_tz and not arr_viewer_suffix) %}
+{% set show_viewer_row = dep_show_viewer or arr_show_viewer %}
 {% set dep_city = dep_air.get('city') or dep_air.get('name') or dep_code %}
 {% set arr_city = arr_air.get('city') or arr_air.get('name') or arr_code %}
 {% set dep_date_display = dep_primary_src and as_datetime(dep_primary_src).strftime('%d %b (%a)') or '—' %}
@@ -243,8 +245,8 @@ class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
       <div class='line-through opacity-50'>{% if arr_changed %}{{ arr_strike }}{% else %}<span class='block min-h-[1.25rem]'></span>{% endif %}</div>
       {% endif %}
       {% if show_viewer_row %}
-      <div class='opacity-70'>{% if dep_viewer %}{{ dep_viewer }} {{ viewer_tz }}{{ dep_viewer_suffix }}{% else %}<span class='block min-h-[1.25rem]'></span>{% endif %}</div>
-      <div class='opacity-70'>{% if arr_viewer %}{{ arr_viewer }} {{ viewer_tz }}{{ arr_viewer_suffix }}{% else %}<span class='block min-h-[1.25rem]'></span>{% endif %}</div>
+      <div class='opacity-70'>{% if dep_show_viewer %}{{ dep_viewer }} {{ viewer_tz }}{{ dep_viewer_suffix }}{% else %}<span class='block min-h-[1.25rem]'></span>{% endif %}</div>
+      <div class='opacity-70'>{% if arr_show_viewer %}{{ arr_viewer }} {{ viewer_tz }}{{ arr_viewer_suffix }}{% else %}<span class='block min-h-[1.25rem]'></span>{% endif %}</div>
       {% endif %}
       {% if show_term_gate_row %}
       <div class='opacity-70'>{{ dep_term_gate }}</div>
