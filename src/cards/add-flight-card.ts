@@ -117,10 +117,10 @@ class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
 {% set route_state = 'Scheduled' if raw_state|lower == 'unknown' else raw_state %}
 {% set state = route_state %}
 
-{% set dep_primary_src = dep.get('actual') or dep.get('estimated') or dep.get('scheduled') %}
-{% set arr_primary_src = arr.get('actual') or arr.get('estimated') or arr.get('scheduled') %}
-{% set dep_sched_src = dep.get('scheduled') %}
-{% set arr_sched_src = arr.get('scheduled') %}
+{% set dep_primary_src = dep.get('actual_viewer_local') or dep.get('estimated_viewer_local') or dep.get('scheduled_viewer_local') or dep.get('actual_local') or dep.get('estimated_local') or dep.get('scheduled_local') or dep.get('actual') or dep.get('estimated') or dep.get('scheduled') %}
+{% set arr_primary_src = arr.get('actual_viewer_local') or arr.get('estimated_viewer_local') or arr.get('scheduled_viewer_local') or arr.get('actual_local') or arr.get('estimated_local') or arr.get('scheduled_local') or arr.get('actual') or arr.get('estimated') or arr.get('scheduled') %}
+{% set dep_sched_src = dep.get('scheduled_viewer_local') or dep.get('scheduled_local') or dep.get('scheduled') %}
+{% set arr_sched_src = arr.get('scheduled_viewer_local') or arr.get('scheduled_local') or arr.get('scheduled') %}
 {% set dep_primary = dep_primary_src and (dep_primary_src|string).replace(' ','T').split('T')[1][:5] or '—' %}
 {% set arr_primary = arr_primary_src and (arr_primary_src|string).replace(' ','T').split('T')[1][:5] or '—' %}
 {% set dep_strike = dep_sched_src and (dep_sched_src|string).replace(' ','T').split('T')[1][:5] or none %}
@@ -129,8 +129,8 @@ class FlightStatusTrackerAddCard extends HTMLElement implements LovelaceCard {
 {% set arr_changed = arr_primary != '—' and arr_strike and arr_primary != arr_strike %}
 {% set show_strike_row = dep_changed or arr_changed %}
 
-{% set dep_tz = dep_air.get('tz_short') or '' %}
-{% set arr_tz = arr_air.get('tz_short') or '' %}
+{% set dep_tz = dep_primary_src and as_datetime(dep_primary_src).strftime('%Z') or dep_air.get('tz_short') or '' %}
+{% set arr_tz = arr_primary_src and as_datetime(arr_primary_src).strftime('%Z') or arr_air.get('tz_short') or '' %}
 {% set dep_city = dep_air.get('city') or dep_air.get('name') or dep_code %}
 {% set arr_city = arr_air.get('city') or arr_air.get('name') or arr_code %}
 {% set dep_date_display = dep_primary_src and as_datetime(dep_primary_src).strftime('%d %b (%a)') or '—' %}
